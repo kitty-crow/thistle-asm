@@ -1,0 +1,25 @@
+{
+  "name": "@kittyx/thistle-asm",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "description": "Thistle32 and Thistle64 assembler, linker and THX tooling.",
+  "exports": {
+    ".": "./lib.ts",
+    "./format": "./fmt.ts",
+    "./assembler": "./asm.ts",
+    "./linker": "./link.ts"
+  },
+  "scripts": {
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run check"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  },
+  "author": {
+    "name": "Kitty Crow",
+    "url": "https://kittycrow.dev"
+  },
+  "license": "MIT"
+}
