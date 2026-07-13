@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "dependants": [
+    {
+      "repository": "kitty-crow/thistle",
+      "dependency": "ThistleASM",
+      "impact": [
+        "assembler",
+        "kernel"
+      ]
+    },
+    {
+      "repository": "kitty-crow/thistlecc",
+      "dependency": "ThistleASM",
+      "impact": [
+        "assembler",
+        "compiler-driver"
+      ]
+    },
+    {
+      "repository": "kitty-crow/mikuOS",
+      "dependency": "ThistleASM",
+      "impact": [
+        "assembler",
+        "root-image"
+      ]
+    }
+  ]
+}
