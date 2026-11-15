@@ -48,8 +48,8 @@ export const quote = (s: string): string => {
     const n = q[++i];
     if (n === undefined) throw new Error("unfinished string escape");
     const m: Record<string, string> = { n: "\n", r: "\r", t: "\t", b: "\b", f: "\f", v: "\v", "0": "\0", "\\": "\\", "'": "'", "\"": "\"" };
-    if (n === "x") { let z; [z, i] = hx(q, i + 1, 2); out += z; i--; }
-    else if (n === "u") { let z; [z, i] = hx(q, i + 1, 4); out += z; i--; }
+    if (n === "x") { const pair = hx(q, i + 1, 2); out += pair[0]; i = pair[1] - 1; }
+    else if (n === "u") { const pair = hx(q, i + 1, 4); out += pair[0]; i = pair[1] - 1; }
     else if (/[0-7]/.test(n)) {
       const x = new RegExp(`^[0-7]{1,3}`).exec(q.slice(i))![0];
       out += String.fromCharCode(Number.parseInt(x, 8)); i += x.length - 1;
