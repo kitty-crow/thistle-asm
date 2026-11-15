@@ -101,17 +101,27 @@ const hash = (b: Uint8Array): number => {
   return n >>> 0;
 };
 
-const rec = (x: unknown): Record<string, unknown> => {
+/**
+ * JSON has a finite structural value grammar. Do not erase metadata into
+ * `any` or `unknown`: the decoder validates the concrete shape before
+ * constructing a Thistle executable, and Bake must retain these guards.
+ */
+type JsonValue = string | number | boolean | null | JsonValue[] | JsonObject | undefined;
+interface JsonObject { [name: string]: JsonValue; }
+
+const rec = (x: JsonValue): JsonObject => {
   if (!x || typeof x !== "object" || Array.isArray(x)) throw new Error("bad Thistle binary header");
-  return x as Record<string, unknown>;
+  return x as JsonObject;
 };
 
-const num = (x: unknown, k: string): number => {
+const list = (x: JsonValue): x is JsonValue[] => Array.isArray(x);
+
+const num = (x: JsonValue, k: string): number => {
   if (!Number.isSafeInteger(x) || (x as number) < 0) throw new Error(`bad ${k} in Thistle binary`);
   return x as number;
 };
 
-const str = (x: unknown, k: string): string => {
+const str = (x: JsonValue, k: string): string => {
   if (typeof x !== "string") throw new Error(`bad ${k} in Thistle binary`);
   return x;
 };
@@ -150,9 +160,9 @@ export class Codec {
     const hn = v.getUint32(4, true), pn = v.getUint32(8, true);
     if (16 + hn + pn !== b.length) throw new Error("bad Thistle binary length");
     if (v.getUint32(12, true) !== hash(b.subarray(16))) throw new Error("Thistle binary checksum mismatch");
-    const m = rec(JSON.parse(dec(b.subarray(16, 16 + hn))));
+    const m = rec(JSON.parse(dec(b.subarray(16, 16 + hn))) as JsonValue);
     if (m.machine !== x.machine || m.ver !== x.ver) throw new Error("Thistle magic, machine and version disagree");
-    if (!Array.isArray(m.sec) || !Array.isArray(m.sym) || !Array.isArray(m.rel) || !Array.isArray(m.dbg) || !Array.isArray(m.ident)) throw new Error("bad Thistle binary tables");
+    if (!list(m.sec) || !list(m.sym) || !list(m.rel) || !list(m.dbg) || !list(m.ident)) throw new Error("bad Thistle binary tables");
     const sn = new Set<string>();
     for (const q0 of m.sec) {
       const q = rec(q0), off = num(q.at, "section offset"), len = num(q.len, "section length"), size = num(q.size, "section size");
