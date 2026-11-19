@@ -1,6 +1,6 @@
 {
   "name": "@kittyx/thistle-asm",
-  "version": "0.1.0",
+  "version": "2.1.1",
   "private": false,
   "type": "module",
   "description": "Thistle32 and Thistle64 assembler, linker and THX tooling.",
@@ -11,15 +11,20 @@
     "./linker": "./link.ts"
   },
   "scripts": {
-    "check": "tsc -p tsconfig.json --noEmit",
-    "test": "npm run check"
+    "check": "bun --bun tsc -p tsconfig.json --noEmit",
+    "test": "bun run guards && bun run check",
+    "guards": "bash scripts/check-guards.sh"
   },
   "devDependencies": {
+    "@kitty-crow/code-guards": "git+https://github.com/kitty-crow/code-guards.git#d1ce06c6b4a71e5f94ca97ba4b0f6780408aa3f6",
     "typescript": "^5.9.2"
   },
   "author": {
     "name": "Kitty Crow",
     "url": "https://kittycrow.dev"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "bun": ">=1.1.0"
+  }
 }

@@ -142,5 +142,5 @@ const src = new Map<string, string>([
 ]);
 
 export const libInc = (name: string): Inc => {
-  const s = src.get(name); if (s === undefined) throw new Error(`include not found: ${name}`); return { src: s, file: name };
+  const s = src.get(name) ?? null; if (s === null) throw new Error(`include not found: ${name}`); return { src: s, file: name };
 };

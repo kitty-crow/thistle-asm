@@ -56,23 +56,24 @@ export const INS: readonly Ins[] = [
 ];
 
 export const BY_NAME = new Map(INS.map(x => [x.name, x]));
-export const BY_OP = new Map(INS.map(x => [x.op, x]));
+export const BY_OP = new Map<number, Ins>(INS.map(x => [x.op, x]));
 
 const alias = new Map<string, number>([["fp", 13], ["sp", 14], ["lr", 15]]);
 
 export const reg = (s: string): number | null => {
   const k = s.trim().toLowerCase();
-  const a = alias.get(k);
-  if (a !== undefined) return a;
+  const a = (alias.get(k) ?? null);
+  if (a != null) return a;
   const m = /^r(\d+)$/.exec(k);
   if (!m) return null;
-  const n = Number(m[1]);
+  const n = Number((m[1] ?? NaN));
   return n >= 0 && n < 16 ? n : null;
 };
 
 export const rname = (n: number): string => n === 13 ? "fp" : n === 14 ? "sp" : n === 15 ? "lr" : `r${n}`;
 
-export const word = (op: Op, d = 0, a = 0, b = 0, imm = 0): Uint8Array => {
+export const word = (op: Op, ...operands: [] | [number] | [number, number] | [number, number, number] | [number, number, number, number]): Uint8Array => {
+  const d = operands[0] ?? 0, a = operands[1] ?? 0, b = operands[2] ?? 0, imm = operands[3] ?? 0;
   const x = new Uint8Array(I_SZ);
   x[0] = op; x[1] = d; x[2] = a; x[3] = b;
   new DataView(x.buffer).setInt32(4, imm, true);
@@ -80,7 +81,7 @@ export const word = (op: Op, d = 0, a = 0, b = 0, imm = 0): Uint8Array => {
 };
 
 export interface DecIns {
-  op: Op;
+  op: number;
   d: number;
   a: number;
   b: number;
@@ -90,13 +91,13 @@ export interface DecIns {
 export const decode = (b: Uint8Array, at: number): DecIns => {
   if (at < 0 || at + I_SZ > b.length) throw new Error("truncated thistle32 instruction");
   const v = new DataView(b.buffer, b.byteOffset, b.byteLength);
-  return { op: b[at]! as Op, d: b[at + 1]!, a: b[at + 2]!, b: b[at + 3]!, imm: v.getInt32(at + 4, true) };
+  return { op: v.getUint8(at), d: v.getUint8(at + 1), a: v.getUint8(at + 2), b: v.getUint8(at + 3), imm: v.getInt32(at + 4, true) };
 };
 
 const mem = (a: number, n: number): string => `[${rname(a)}${n < 0 ? " - " : n > 0 ? " + " : ""}${n ? Math.abs(n) : ""}]`;
 
 export const text = (x: DecIns, pc = 0): string => {
-  const i = BY_OP.get(x.op);
+  const i = (BY_OP.get(x.op) ?? null);
   if (!i) return `.word 0x${x.op.toString(16).padStart(2, "0")} ; bad opcode`;
   const n = i.name, d = rname(x.d), a = rname(x.a), b = rname(x.b);
   switch (i.form) {

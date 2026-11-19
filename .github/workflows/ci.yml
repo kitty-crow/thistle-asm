@@ -1,34 +1,32 @@
-name: CI
+name: Assembler validation
 
 on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  test:
+  validate:
+    name: Validate assembler
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out source
+        uses: actions/checkout@v5
         with:
           submodules: recursive
 
-      - uses: oven-sh/setup-bun@v2
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
+      - name: Install dependencies
+        run: bun install
 
-      - name: Install
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
+      - name: Strict Code Guards
+        run: bun run guards
 
-      - name: Check
-        run: npm test
+      - name: Type-check assembler
+        run: bun run check

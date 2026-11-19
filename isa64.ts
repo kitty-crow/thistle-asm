@@ -72,30 +72,31 @@ export const INS64: readonly Ins64[] = [
 ];
 
 export const BY64_NAME = new Map(INS64.map(x => [x.name, x]));
-export const BY64_OP = new Map(INS64.map(x => [x.op, x]));
+export const BY64_OP = new Map<number, Ins64>(INS64.map(x => [x.op, x]));
 
 const xa = new Map<string, number>([["fp", 29], ["sp", 30], ["lr", 31]]);
 
 export const xreg = (s: string): number | null => {
-  const k = s.trim().toLowerCase(), a = xa.get(k);
-  if (a !== undefined) return a;
+  const k = s.trim().toLowerCase(), a = (xa.get(k) ?? null);
+  if (a != null) return a;
   const m = /^[xr](\d+)$/.exec(k);
   if (!m) return null;
-  const n = Number(m[1]);
+  const n = Number((m[1] ?? NaN));
   return n >= 0 && n < 32 ? n : null;
 };
 
 export const freg = (s: string): number | null => {
   const m = /^f(\d+)$/.exec(s.trim().toLowerCase());
   if (!m) return null;
-  const n = Number(m[1]);
+  const n = Number((m[1] ?? NaN));
   return n >= 0 && n < 16 ? n : null;
 };
 
 export const xname = (n: number): string => n === 29 ? "fp" : n === 30 ? "sp" : n === 31 ? "lr" : `x${n}`;
 export const fname = (n: number): string => `f${n}`;
 
-export const word64 = (op: Op64, d = 0, a = 0, b = 0, imm = 0n): Uint8Array => {
+export const word64 = (op: Op64, ...operands: [] | [number] | [number, number] | [number, number, number] | [number, number, number, bigint]): Uint8Array => {
+  const d = operands[0] ?? 0, a = operands[1] ?? 0, b = operands[2] ?? 0, imm = operands[3] ?? 0n;
   const x = new Uint8Array(I64_SZ);
   x[0] = op; x[1] = d; x[2] = a; x[3] = b;
   new DataView(x.buffer).setBigInt64(8, BigInt.asIntN(64, imm), true);
@@ -109,7 +110,7 @@ export const fword64 = (op: Op64, d: number, n: number): Uint8Array => {
 };
 
 export interface Dec64 {
-  op: Op64;
+  op: number;
   d: number;
   a: number;
   b: number;
@@ -120,14 +121,14 @@ export interface Dec64 {
 export const decode64 = (b: Uint8Array, at: number): Dec64 => {
   if (at < 0 || at + I64_SZ > b.length) throw new Error("truncated thistle64 instruction");
   const v = new DataView(b.buffer, b.byteOffset, b.byteLength);
-  return { op: b[at]! as Op64, d: b[at + 1]!, a: b[at + 2]!, b: b[at + 3]!, imm: v.getBigInt64(at + 8, true), fimm: v.getFloat64(at + 8, true) };
+  return { op: v.getUint8(at), d: v.getUint8(at + 1), a: v.getUint8(at + 2), b: v.getUint8(at + 3), imm: v.getBigInt64(at + 8, true), fimm: v.getFloat64(at + 8, true) };
 };
 
 const mem = (a: number, n: bigint): string => `[${xname(a)}${n < 0n ? " - " : n > 0n ? " + " : ""}${n ? (n < 0n ? -n : n) : ""}]`;
 const hx = (n: bigint): string => `0x${BigInt.asUintN(64, n).toString(16)}`;
 
 export const text64 = (x: Dec64, pc = 0n): string => {
-  const i = BY64_OP.get(x.op);
+  const i = (BY64_OP.get(x.op) ?? null);
   if (!i) return `.byte 0x${x.op.toString(16).padStart(2, "0")} ; bad opcode`;
   const n = i.name, d = xname(x.d), a = xname(x.a), b = xname(x.b), fd = fname(x.d), fa = fname(x.a), fb = fname(x.b);
   switch (i.form) {
