@@ -7,13 +7,16 @@ assembler and linker, relocatable THO objects, and THX executables.
 The library also provides the decoder used by tools that inspect or
 load those formats.
 
-## Build and test
+## Assembler validation
 
-    npm install
-    npm test
+Bun is the required host runtime. No JavaScript build is needed.
+
+    bun install
+    bun run guards
+    bun run check
 
 The current package is TypeScript and is consumed directly from
-source. `npm test` runs the strict type check.
+source. `bun run test` runs Code Guards in strict mode and checks TypeScript types.
 
 ## Modules
 
